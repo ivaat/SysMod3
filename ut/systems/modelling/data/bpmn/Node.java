@@ -9,6 +9,7 @@ public abstract class Node {
     private LinkedList<SequenceFlow> outgoing;
     private LinkedList<SequenceFlow> incoming;
     private BPMNModel model;
+    private String id;
 
     public Node() {
         this.outgoing = new LinkedList<SequenceFlow>();
@@ -37,5 +38,13 @@ public abstract class Node {
 
     public void setModel(BPMNModel model) {
         this.model = model;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }
