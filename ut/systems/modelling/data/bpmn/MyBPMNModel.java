@@ -8,15 +8,16 @@ import java.util.Objects;
  * Created by taavi on 11/3/2016.
  */
 public class MyBPMNModel {
-    private final List<MyNode> nodes = new ArrayList<MyNode>();
+    private final String label;
+    private final List<MyNode> nodes = new ArrayList<>();
     private MyCompoundTask parentTask;
     private MyEvent startEvent;
     private MyEvent endEvent;
 
-    private MyBPMNModel() {}
+    private MyBPMNModel(String label) {this.label = label;}
 
-    public static MyBPMNModel create() {
-        return new MyBPMNModel();
+    public static MyBPMNModel create(String label) {
+        return new MyBPMNModel(label);
     }
 
     public MyCompoundTask getParentTask() {
@@ -29,7 +30,7 @@ public class MyBPMNModel {
 
     public void addNode(MyNode node) {
         this.nodes.add(node);
-        node.setModel(this);
+
     }
 
     public MyEvent getStartEvent() {
@@ -48,13 +49,17 @@ public class MyBPMNModel {
         this.endEvent = endEvent;
     }
 
-    public MyNode getNode(String id) {
+    public MyNode getNodeById(String id) {
         for (MyNode node : this.nodes) {
             if (Objects.equals(node.getId(), id)) {
                 return node;
             }
         }
 
-        return null; //TODO consider this
+        return null;
+    }
+
+    public String getLabel() {
+        return label;
     }
 }

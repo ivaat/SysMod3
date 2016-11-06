@@ -1,21 +1,17 @@
 package ut.systems.modelling.data.petrinet;
 
-import ut.systems.modelling.data.shared.ITokenOwner;
-import ut.systems.modelling.data.shared.Token;
-
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by taavii on 5.11.2016.
  */
-public class MyPlace implements ITokenOwner {
+public class MyPlace {
     private final String id;
     private String label;
     private final List<MyTPArc> incomingArcs = new ArrayList<>();
     private final List<MyPTArc> outgoingArcs = new ArrayList<>();
     private final MyPetriNetModel parent;
-    private final List<Token> token = new ArrayList<>(); //TODO - see if this is necessary for diagram conversion
 
     private MyPlace(String id, String label, MyPetriNetModel parent) {
         this.id = id;
@@ -23,9 +19,10 @@ public class MyPlace implements ITokenOwner {
         this.parent = parent;
     };
 
-    public static MyPlace create(MyPetriNetModel parent, String id, String label) {
+    public static MyPlace createAndBind(MyPetriNetModel parent, String id, String label, MyTransition transition) {
         MyPlace place = new MyPlace(id, label, parent);
         parent.getAllPlaces().add(place);
+        MyTPArc.createAndBind(transition, place);
         return place;
     }
 
@@ -58,10 +55,6 @@ public class MyPlace implements ITokenOwner {
 
     public MyPetriNetModel getParent() {
         return parent;
-    }
-
-    public List<Token> getToken() {
-        return token;
     }
 
     @Override

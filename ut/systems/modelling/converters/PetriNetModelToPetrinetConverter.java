@@ -16,20 +16,16 @@ import java.util.Map;
 public class PetriNetModelToPetrinetConverter implements IConverter<MyPetriNetModel, MyWrappedPetrinet> {
     @Override
     public MyWrappedPetrinet convert(MyPetriNetModel petriNetModel) {
-        //FIXME
-        Petrinet petrinet = new PetrinetImpl("TODO TEXT HERE");
+        Petrinet petrinet = new PetrinetImpl(petriNetModel.getLabel());
         Map<MyPlace, Place> placeMapping = new HashMap<>();
         Map<MyTransition, Transition> transitionMapping = new HashMap<>();
 
         for (MyTransition myTransition : petriNetModel.getTransitions()) {
-            Transition transition = petrinet.addTransition(myTransition.getName());
-            transition.setInvisible(myTransition.isInvisible());
-            transitionMapping.put(myTransition, transition);
+            transitionMapping.put(myTransition, petrinet.addTransition(myTransition.getName()));
         }
 
         for (MyPlace myPlace : petriNetModel.getAllPlaces()) {
-            Place place = petrinet.addPlace(myPlace.getLabel());
-            placeMapping.put(myPlace, place);
+            placeMapping.put(myPlace, petrinet.addPlace(myPlace.getLabel()));
         }
 
         for (MyTransition myTransition : petriNetModel.getTransitions()) {

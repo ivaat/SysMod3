@@ -9,14 +9,12 @@ import java.util.List;
 public class MyTransition {
     private final String id;
     private final String label;
-    private final boolean isInvisible;
     private final List<MyPTArc> incomingArcs = new ArrayList<>();
     private final List<MyTPArc> outgoingArcs = new ArrayList<>();
 
-    private MyTransition(String id, String label, boolean isInvisible) {
+    private MyTransition(String id, String label) {
         this.id = id;
         this.label = label;
-        this.isInvisible = isInvisible;
     };
 
     public String getName() {
@@ -31,15 +29,11 @@ public class MyTransition {
         return this.outgoingArcs;
     }
 
-    //TODO - remove invisible parameter, doesn't seem to be needed
-    public static MyTransition create(MyPetriNetModel pnModel, String id, String label, boolean isInvisible) {
-        MyTransition transition = new MyTransition(id, label, isInvisible);
+    public static MyTransition createAndBind(MyPetriNetModel pnModel, String id, String label, MyPlace place) {
+        MyTransition transition = new MyTransition(id, label);
         pnModel.getTransitions().add(transition);
+        MyPTArc.createAndBind(place, transition);
         return transition;
-    }
-
-    public boolean isInvisible() {
-        return isInvisible;
     }
 
     public String getId() {

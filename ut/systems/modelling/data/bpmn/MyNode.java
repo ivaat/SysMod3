@@ -9,7 +9,6 @@ import java.util.List;
 public abstract class MyNode {
     private final List<MySequenceFlow> outgoing = new ArrayList<>();
     private final List<MySequenceFlow> incoming = new ArrayList<>();
-    private MyBPMNModel model;
     private final String id;
     private final String label;
 
@@ -34,19 +33,16 @@ public abstract class MyNode {
         this.outgoing.add(newOutgoing);
     }
 
-    public MyBPMNModel getModel() {
-        return model;
-    }
-
-    public void setModel(MyBPMNModel model) {
-        this.model = model;
-    }
-
     public String getId() {
         return id;
     }
 
     public String getLabel() {
         return label;
+    }
+
+    @Override
+    public String toString() {
+        return this.label;
     }
 }

@@ -28,4 +28,9 @@ public class MySequenceFlow {
     public void setSource(MyNode source) {
         this.source = source;
     }
+
+    @Override
+    public String toString() {
+        return source.toString() + " -> " + destination.toString();
+    }
 }

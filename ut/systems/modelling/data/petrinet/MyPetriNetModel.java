@@ -7,15 +7,16 @@ import java.util.List;
  * Created by taavi on 11/3/2016.
  */
 public class MyPetriNetModel {
+    private final String label;
     private MyPlace startPlace;
     private MyPlace endPlace;
     private final List<MyPlace> allPlaces = new ArrayList<>();
     private final List<MyTransition> transitions = new ArrayList<>();
 
-    private MyPetriNetModel() {};
+    private MyPetriNetModel(String label) {this.label = label;}
 
-    public static MyPetriNetModel create() {
-        return new MyPetriNetModel();
+    public static MyPetriNetModel create(String label) {
+        return new MyPetriNetModel(label);
     }
 
     public MyPlace getStartPlace() {
@@ -60,5 +61,9 @@ public class MyPetriNetModel {
         }
 
         return null;
+    }
+
+    public String getLabel() {
+        return label;
     }
 }

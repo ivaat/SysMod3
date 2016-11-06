@@ -1,5 +1,6 @@
 package ut.systems.modelling.converters;
 
+import org.processmining.models.graphbased.directed.ContainableDirectedGraphElement;
 import org.processmining.models.graphbased.directed.bpmn.BPMNDiagram;
 import org.processmining.models.graphbased.directed.bpmn.BPMNEdge;
 import org.processmining.models.graphbased.directed.bpmn.BPMNNode;
@@ -16,13 +17,13 @@ import java.util.Collection;
  */
 public class BpmnDiagramToBpmnModelConverter implements IConverter<BPMNDiagram, MyBPMNModel>{
     @Override
-    public MyBPMNModel convert(BPMNDiagram diagram) {
-        MyBPMNModel ourBPMN = MyBPMNModel.create();
+    public MyBPMNModel convert(BPMNDiagram diagram) throws Exception {
+        MyBPMNModel ourBPMN = MyBPMNModel.create(diagram.getLabel());
 
         Collection<Event> events = diagram.getEvents();
 
         for (Event event : events) {
-            if (event.getEventType() == Event.EventType.START) {
+            if (event.getParentSubProcess() == null && event.getEventType() == Event.EventType.START) {
                 processProMNode(event, diagram, ourBPMN);
             }
         }
@@ -30,8 +31,8 @@ public class BpmnDiagramToBpmnModelConverter implements IConverter<BPMNDiagram, 
         return ourBPMN;
     }
 
-    private static MyNode processProMNode(BPMNNode node, BPMNDiagram diagram, MyBPMNModel model) {
-        MyNode existingNode = model.getNode(node.getId().toString());
+    private static MyNode processProMNode(BPMNNode node, BPMNDiagram diagram, MyBPMNModel model) throws Exception {
+        MyNode existingNode = model.getNodeById(node.getId().toString());
 
         if (existingNode != null) {
             return existingNode; // for join gateways etc nodes that have multiple incoming flows
@@ -51,11 +52,24 @@ public class BpmnDiagramToBpmnModelConverter implements IConverter<BPMNDiagram, 
         } else if (node instanceof Activity) {
             if (node instanceof SubProcess) {
                 newNode = MyCompoundTask.create(node.getId().toString(), node.getLabel());
+                //we're currently considering only the case where the subprocess node has just one child and it is a BPMN diagram (can be nested)
+                SubProcess subProcess = (SubProcess)node;
+                MyBPMNModel subModel = MyBPMNModel.create(subProcess.getLabel());
 
-                // TODO: if we have the time. It's been said that a plugin that only converts a flat one is better than a plugin that doesn't convert anything : )
+                for (ContainableDirectedGraphElement element : subProcess.getChildren()) {
+                    if (    element instanceof Event &&
+                            ((Event) element).getEventType() == Event.EventType.START &&
+                            ((Event) element).getParentSubProcess() == subProcess) {
+                        processProMNode((Event)element, diagram, subModel);
+                        break;
+                    }
+                }
+
+                subModel.setParentTask((MyCompoundTask) newNode);
+                ((MyCompoundTask) newNode).setNestedModel(subModel);
+                model.addNode(newNode);
             } else {
                 newNode = MySimpleTask.create(node.getId().toString(), node.getLabel());
-
                 model.addNode(newNode);
             }
         } else if (node instanceof Gateway) {
@@ -64,18 +78,31 @@ public class BpmnDiagramToBpmnModelConverter implements IConverter<BPMNDiagram, 
             Collection<BPMNEdge<? extends BPMNNode, ? extends BPMNNode>> inEdges = diagram.getInEdges(node);
             Collection<BPMNEdge<? extends BPMNNode, ? extends BPMNNode>> outEdges = diagram.getOutEdges(node);
 
-            if (((Gateway) node).getGatewayType() == Gateway.GatewayType.PARALLEL) { // TODO: Not sure if this is the correct way to check
-                if (inEdges.size() > outEdges.size()) {
+            //strictly speaking the below tests aren't 100% accu
+            if (((Gateway) node).getGatewayType() == Gateway.GatewayType.PARALLEL) {
+                if (outEdges.size() == 1) {
                     ((MyGateway) newNode).setType(MyGateway.GatewayType.ANDJOIN);
-                } else {
+                }
+                else if (inEdges.size() == 1){
                     ((MyGateway) newNode).setType(MyGateway.GatewayType.ANDSPLIT);
                 }
-            } else { // TODO: should be more specific? //TODO check that its Databased, throw an exception otherwise
-                if (inEdges.size() > outEdges.size()) {
+                else {
+                    throw new Exception("Incorrect AND gateway encountered. Incoming edges: " + inEdges.size() + ", outgoing edges: " + outEdges.size());
+                }
+            }
+            else if (((Gateway) node).getGatewayType() == Gateway.GatewayType.DATABASED) {
+                if (outEdges.size() == 1) {
                     ((MyGateway) newNode).setType(MyGateway.GatewayType.XORJOIN);
-                } else {
+                }
+                else if (inEdges.size() == 1){
                     ((MyGateway) newNode).setType(MyGateway.GatewayType.XORSPLIT);
                 }
+                else {
+                    throw new Exception("Incorrect AND gateway encountered. Incoming edges: " + inEdges.size() + ", outgoing edges: " + outEdges.size());
+                }
+            }
+            else {
+                throw new Exception("Unknown gateway type encountered:" + ((Gateway) node).getGatewayType());
             }
 
             model.addNode(newNode);
